@@ -1,6 +1,7 @@
 {
   "name": "webbackend",
   "version": "1.0.0",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,6 +24,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "firebase-admin": "^13.4.0",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "sib-api-v3-sdk": "^8.5.0"
   }
 }

@@ -1,13 +1,19 @@
-const express = require("express");
-const multer = require("multer");
-const { createClient } = require("@supabase/supabase-js");
+import express from "express";
+import multer from "multer";
+import { createClient } from "@supabase/supabase-js";
+
 const router = express.Router();
 
-// Initialize Supabase client
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_KEY // Use service key for server-side operations
-);
+// Function to get Supabase client (lazy initialization)
+const getSupabaseClient = () => {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_KEY) {
+    throw new Error("Supabase environment variables not found");
+  }
+  return createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
+};
 
 // Configure multer for file uploads
 const upload = multer({
@@ -35,6 +41,9 @@ router.post(
   upload.array("images", 5),
   async (req, res) => {
     try {
+      // Get Supabase client (will throw error if env vars not set)
+      const supabase = getSupabaseClient();
+
       const { productId } = req.params;
       const files = req.files;
 
@@ -98,6 +107,13 @@ router.post(
       });
     } catch (error) {
       console.error("Upload endpoint error:", error);
+      if (error.message === "Supabase environment variables not found") {
+        return res.status(500).json({
+          success: false,
+          error:
+            "Supabase client not initialized. Check environment variables.",
+        });
+      }
       res.status(500).json({
         success: false,
         error: "Internal server error during upload",
@@ -109,6 +125,9 @@ router.post(
 // Delete product images
 router.delete("/delete", async (req, res) => {
   try {
+    // Get Supabase client (will throw error if env vars not set)
+    const supabase = getSupabaseClient();
+
     const { imageUrls } = req.body;
 
     if (!imageUrls || !Array.isArray(imageUrls) || imageUrls.length === 0) {
@@ -166,6 +185,12 @@ router.delete("/delete", async (req, res) => {
     });
   } catch (error) {
     console.error("Delete endpoint error:", error);
+    if (error.message === "Supabase environment variables not found") {
+      return res.status(500).json({
+        success: false,
+        error: "Supabase client not initialized. Check environment variables.",
+      });
+    }
     res.status(500).json({
       success: false,
       error: "Internal server error during deletion",
@@ -182,4 +207,4 @@ router.get("/health", (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
